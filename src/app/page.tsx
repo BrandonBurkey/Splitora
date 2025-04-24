@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Button from '@/components/ui/Button';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -10,8 +11,12 @@ export default function Home() {
           <span className="text-2xl font-bold text-emerald-600">Splitora</span>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" size="sm">Sign In</Button>
-          <Button size="sm">Get Started</Button>
+          <Link href="/signin">
+            <Button variant="outline" size="sm">Sign In</Button>
+          </Link>
+          <Link href="/signup">
+            <Button size="sm">Get Started</Button>
+          </Link>
         </div>
       </nav>
 
@@ -26,13 +31,17 @@ export default function Home() {
             Save money while keeping everything organized in one place.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button size="lg">Start Saving Now</Button>
-            <Button variant="outline" size="lg">Learn More</Button>
+            <Link href="/signup">
+              <Button size="lg">Start Saving Now</Button>
+            </Link>
+            <Link href="#features">
+              <Button variant="outline" size="lg">Learn More</Button>
+            </Link>
           </div>
         </div>
 
         {/* Feature Preview */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div id="features" className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="p-6 bg-white rounded-xl shadow-sm">
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Easy Splitting</h3>
             <p className="text-gray-600">Automatically calculate and track who owes what</p>
