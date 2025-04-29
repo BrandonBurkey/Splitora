@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  subscriptions SubscriptionMember[]
+  hostedGroups  SubscriptionGroup[] @relation("GroupHost")
+  payments      Payment[]
+  activities    Activity[]
+}
+
+model SubscriptionGroup {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  maxMembers    Int
+  price         Float
+  status        String    @default("active")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  hostId        String
+  remainingSpaces Int     @default(0)
+  location      String
+  host          User      @relation("GroupHost", fields: [hostId], references: [id])
+  members       SubscriptionMember[]
+  payments      Payment[]
+  activities    Activity[]
+}
+
+model SubscriptionMember {
+  id              String    @id @default(cuid())
+  userId          String
+  groupId         String
+  share           Float
+  status          String    @default("active")
+  joinedAt        DateTime  @default(now())
+  user            User      @relation(fields: [userId], references: [id])
+  group           SubscriptionGroup @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
+}
+
+model Payment {
+  id            String    @id @default(cuid())
+  amount        Float
+  status        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        String
+  groupId       String
+  user          User      @relation(fields: [userId], references: [id])
+  group         SubscriptionGroup @relation(fields: [groupId], references: [id])
+}
+
+model Activity {
+  id            String    @id @default(cuid())
+  type          String
+  description   String
+  createdAt     DateTime  @default(now())
+  userId        String
+  groupId       String?
+  user          User      @relation(fields: [userId], references: [id])
+  group         SubscriptionGroup? @relation(fields: [groupId], references: [id])
+}
