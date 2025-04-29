@@ -1,52 +1,78 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
-
-// Mock data for subscription groups - we'll replace this with real data later
-const mockSubscriptions = [
-  {
-    id: 1,
-    name: 'Netflix Premium',
-    personalPrice: 19.99,
-    price: 19.99,
-    yourShare: 4.99,
-    members: 3,
-    maxMembers: 4,
-    description: 'Share Netflix Premium with friends and save up to 75%',
-    category: 'Entertainment',
-  },
-  {
-    id: 2,
-    name: 'Spotify Family',
-    personalPrice: 9.99,
-    price: 14.99,
-    yourShare: 2.49,
-    members: 4,
-    maxMembers: 6,
-    description: 'Join our Spotify Family plan and enjoy ad-free music',
-    category: 'Music',
-  },
-  {
-    id: 3,
-    name: 'Adobe Creative Cloud',
-    personalPrice: 54.99,
-    price: 54.99,
-    yourShare: 18.33,
-    members: 2,
-    maxMembers: 3,
-    description: 'Share Adobe CC with creative professionals',
-    category: 'Creative',
-  },
-];
+import Button from '@/components/ui/Button';
+import { serviceProviders } from '@/lib/servicePresets';
+import Image from 'next/image';
+import { Search } from 'lucide-react';
 
 const ExplorePage = () => {
   const { user } = useAuth();
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const categories = [
+    { id: 'all', name: 'All' },
+    { id: 'entertainment', name: 'Entertainment' },
+    { id: 'music', name: 'Music' },
+    { id: 'gaming', name: 'Gaming' },
+    { id: 'productivity', name: 'Productivity' },
+    { id: 'education', name: 'Education' }
+  ];
+
+  const getCategory = (provider: typeof serviceProviders[0]) => {
+    const name = provider.name.toLowerCase();
+    
+    // Entertainment/Streaming
+    if (name.includes('netflix') || 
+        name.includes('hbo') || 
+        name.includes('disney') ||
+        name.includes('hulu') ||
+        name.includes('paramount') ||
+        name.includes('peacock') ||
+        name.includes('showtime') ||
+        name.includes('youtube')) {
+      return 'entertainment';
+    }
+    
+    // Music
+    if (name.includes('spotify') ||
+        name.includes('tidal') ||
+        name.includes('apple music')) {
+      return 'music';
+    }
+    
+    // Gaming
+    if (name.includes('xbox') ||
+        name.includes('nintendo') ||
+        name.includes('playstation')) {
+      return 'gaming';
+    }
+    
+    // Productivity/Cloud
+    if (name.includes('microsoft') ||
+        name.includes('google one') ||
+        name.includes('dropbox') ||
+        name.includes('evernote')) {
+      return 'productivity';
+    }
+    
+    // Education/Learning
+    if (name.includes('duolingo') ||
+        name.includes('masterclass') ||
+        name.includes('skillshare') ||
+        name.includes('rosetta stone')) {
+      return 'education';
+    }
+    
+    return 'other';
+  };
 
   useEffect(() => {
     if (!user) {
@@ -56,14 +82,99 @@ const ExplorePage = () => {
     }
   }, [user, router]);
 
-  if (!user || isLoading) {
-    return null;
-  }
+  useEffect(() => {
+    if (searchQuery) return; // Don't scroll when searching
 
-  const categories = ['all', 'Entertainment', 'Music', 'Creative', 'Gaming', 'Productivity'];
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    let scrollAmount = 0;
+    const scrollSpeed = 1; // pixels per frame
+
+    const scroll = () => {
+      scrollAmount += scrollSpeed;
+      if (scrollAmount >= scrollContainer.scrollWidth) {
+        scrollAmount = 0;
+      }
+      scrollContainer.scrollLeft = scrollAmount;
+    };
+
+    const interval = setInterval(scroll, 30);
+    return () => clearInterval(interval);
+  }, [searchQuery]);
+
+  if (!user || isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-emerald-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const formatPrice = (price: number) => {
     return price.toFixed(2);
+  };
+
+  const filteredProviders = serviceProviders.filter(provider => {
+    const matchesCategory = selectedCategory === 'all' || getCategory(provider) === selectedCategory;
+    const matchesSearch = searchQuery ? provider.name.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+    return matchesCategory && matchesSearch;
+  });
+
+  const SubscriptionCard = ({ provider }: { provider: typeof serviceProviders[0] }) => {
+    const defaultPlan = provider.plans[0];
+    const share = defaultPlan.price / defaultPlan.max_members;
+    const savings = defaultPlan.price - share;
+    const savingsPercentage = Math.round((savings / defaultPlan.price) * 100);
+
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-12 h-12 relative">
+            <Image
+              src={provider.logo}
+              alt={provider.name}
+              fill
+              className="object-contain"
+            />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900">{provider.name}</h3>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-emerald-600 font-medium">
+            Save up to ${formatPrice(savings)}/month ({savingsPercentage}% off)
+          </p>
+          {defaultPlan.requires_same_household && (
+            <p className="text-sm text-gray-500 mt-1">
+              * Members must be part of the same household
+            </p>
+          )}
+        </div>
+
+        <Button 
+          size="sm" 
+          className="w-full"
+          onClick={() => router.push(`/explore/${provider.id}`)}
+        >
+          View Available Plans
+        </Button>
+
+        {provider.terms_url && (
+          <a 
+            href={provider.terms_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-gray-500 hover:text-gray-700 mt-2 block text-center"
+          >
+            View Terms of Service
+          </a>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -87,63 +198,145 @@ const ExplorePage = () => {
           <Button onClick={() => router.push('/create')}>Create New Group</Button>
         </div>
 
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Search */}
+        <div className="relative mb-8">
+          <input
+            type="text"
+            placeholder="Search subscriptions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        </div>
+
         {/* Categories */}
-        <div className="flex gap-4 mb-8 overflow-x-auto pb-4">
+        <div className="flex gap-4 mb-1 overflow-x-auto pb-4">
           {categories.map((category) => (
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
-                selectedCategory === category
+                selectedCategory === category.id
                   ? 'bg-emerald-600 text-white'
                   : 'bg-white text-gray-600 hover:bg-emerald-50'
               }`}
             >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
+              {category.name}
             </button>
           ))}
         </div>
 
-        {/* Subscription Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockSubscriptions
-            .filter((sub) => selectedCategory === 'all' || sub.category === selectedCategory)
-            .map((subscription) => {
-              const savings = subscription.personalPrice - subscription.yourShare;
-              const savingsPercentage = Math.round((savings / subscription.personalPrice) * 100);
-              
-              return (
-                <div
-                  key={subscription.id}
-                  className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{subscription.name}</h3>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-emerald-600 font-bold text-lg">${formatPrice(subscription.yourShare)}/month</span>
-                        <span className="text-gray-400 text-sm line-through">${formatPrice(subscription.personalPrice)}/month</span>
+        {/* Service Providers */}
+        {searchQuery || selectedCategory !== 'all' ? (
+          // Static grid layout for search results and specific categories
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProviders.map((provider) => (
+              <SubscriptionCard key={provider.id} provider={provider} />
+            ))}
+          </div>
+        ) : null}
+      </main>
+
+      {/* Full-width scrolling container */}
+      {!searchQuery && selectedCategory === 'all' && (
+        <div className="w-full overflow-hidden">
+          <div className="flex">
+            <div 
+              ref={scrollContainerRef}
+              className="flex gap-8 animate-scroll whitespace-nowrap"
+            >
+              {filteredProviders.map((provider) => (
+                <div key={provider.id} className="inline-block w-72">
+                  <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 relative">
+                        <Image
+                          src={provider.logo}
+                          alt={provider.name}
+                          fill
+                          className="object-contain"
+                        />
                       </div>
+                      <h3 className="text-lg font-semibold text-gray-900">{provider.name}</h3>
                     </div>
-                    <span className="text-sm text-gray-500">
-                      {subscription.members}/{subscription.maxMembers} members
-                    </span>
-                  </div>
-                  <div className="mb-4">
-                    <p className="text-gray-600">{subscription.description}</p>
-                    <p className="text-emerald-600 font-medium mt-2">
-                      Save ${formatPrice(savings)}/month ({savingsPercentage}% off)
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">{subscription.category}</span>
-                    <Button size="sm">Join Group</Button>
+
+                    <div className="mb-3">
+                      <p className="text-emerald-600 font-medium text-sm">
+                        Save up to ${formatPrice(provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members))}/month ({Math.round(((provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members)) / provider.plans[0].price) * 100)}% off)
+                      </p>
+                    </div>
+
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => router.push(`/explore/${provider.id}`)}
+                    >
+                      View Available Plans
+                    </Button>
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+            <div className="flex gap-8 animate-scroll whitespace-nowrap ml-8">
+              {filteredProviders.map((provider) => (
+                <div key={`${provider.id}-duplicate`} className="inline-block w-72">
+                  <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 relative">
+                        <Image
+                          src={provider.logo}
+                          alt={provider.name}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">{provider.name}</h3>
+                    </div>
+
+                    <div className="mb-3">
+                      <p className="text-emerald-600 font-medium text-sm">
+                        Save up to ${formatPrice(provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members))}/month ({Math.round(((provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members)) / provider.plans[0].price) * 100)}% off)
+                      </p>
+                    </div>
+
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => router.push(`/explore/${provider.id}`)}
+                    >
+                      View Available Plans
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </main>
+      )}
+
+      <style jsx>{`
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-100%);
+          }
+        }
+        .animate-scroll {
+          animation: scroll 120s linear infinite;
+        }
+        .animate-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </div>
   );
 };
