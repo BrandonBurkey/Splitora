@@ -74,6 +74,40 @@ const ExplorePage = () => {
     return 'other';
   };
 
+  // Sort providers by popularity
+  const sortByPopularity = (providers: typeof serviceProviders) => {
+    const popularityScores: { [key: string]: number } = {
+      'netflix': 100,
+      'spotify': 95,
+      'disney': 90,
+      'hbo': 85,
+      'youtube': 80,
+      'apple': 75,
+      'hulu': 70,
+      'paramount': 65,
+      'peacock': 60,
+      'showtime': 55,
+      'crunchyroll': 50,
+      'duolingo': 45,
+      'microsoft365': 40,
+      'googleone': 35,
+      'dropbox': 30,
+      'evernote': 25,
+      'masterclass': 20,
+      'skillshare': 15,
+      'rosettastone': 10,
+      'tidal': 5,
+      'xbox': 5,
+      'nintendo': 5
+    };
+
+    return [...providers].sort((a, b) => {
+      const scoreA = popularityScores[a.id] || 0;
+      const scoreB = popularityScores[b.id] || 0;
+      return scoreB - scoreA;
+    });
+  };
+
   useEffect(() => {
     if (!user) {
       router.push('/signin');
@@ -118,11 +152,11 @@ const ExplorePage = () => {
     return price.toFixed(2);
   };
 
-  const filteredProviders = serviceProviders.filter(provider => {
+  const filteredProviders = sortByPopularity(serviceProviders.filter(provider => {
     const matchesCategory = selectedCategory === 'all' || getCategory(provider) === selectedCategory;
     const matchesSearch = searchQuery ? provider.name.toLowerCase().includes(searchQuery.toLowerCase()) : true;
     return matchesCategory && matchesSearch;
-  });
+  }));
 
   const SubscriptionCard = ({ provider }: { provider: typeof serviceProviders[0] }) => {
     const defaultPlan = provider.plans[0];
@@ -138,7 +172,14 @@ const ExplorePage = () => {
               src={provider.logo}
               alt={provider.name}
               fill
+              sizes="(max-width: 768px) 40px, 40px"
               className="object-contain"
+              priority={true}
+              loading="eager"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/logos/placeholder.png'; // Add a placeholder image
+              }}
             />
           </div>
           <h3 className="text-xl font-semibold text-gray-900">{provider.name}</h3>
@@ -256,16 +297,65 @@ const ExplorePage = () => {
                 willChange: 'transform'
               }}
             >
+              {/* First set of items */}
               {filteredProviders.map((provider) => (
                 <div key={provider.id} className="inline-block w-72 flex-shrink-0">
                   <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow h-full">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 relative">
+                      <div className="w-10 h-10 relative bg-gray-100 rounded-lg">
                         <Image
                           src={provider.logo}
                           alt={provider.name}
                           fill
-                          className="object-contain"
+                          sizes="(max-width: 768px) 40px, 40px"
+                          className="object-contain p-1"
+                          priority={true}
+                          loading="eager"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/logos/placeholder.png';
+                            target.onerror = null; // Prevent infinite loop
+                          }}
+                        />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">{provider.name}</h3>
+                    </div>
+
+                    <div className="mb-3">
+                      <p className="text-emerald-600 font-medium text-sm">
+                        Save up to ${formatPrice(provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members))}/month ({Math.round(((provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members)) / provider.plans[0].price) * 100)}% off)
+                      </p>
+                    </div>
+
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => router.push(`/explore/${provider.id}`)}
+                    >
+                      View Available Plans
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {/* Duplicate set of items for seamless loop */}
+              {filteredProviders.map((provider) => (
+                <div key={`${provider.id}-duplicate`} className="inline-block w-72 flex-shrink-0">
+                  <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow h-full">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 relative bg-gray-100 rounded-lg">
+                        <Image
+                          src={provider.logo}
+                          alt={provider.name}
+                          fill
+                          sizes="(max-width: 768px) 40px, 40px"
+                          className="object-contain p-1"
+                          priority={true}
+                          loading="eager"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/logos/placeholder.png';
+                            target.onerror = null; // Prevent infinite loop
+                          }}
                         />
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900">{provider.name}</h3>
@@ -298,7 +388,7 @@ const ExplorePage = () => {
             transform: translateX(0);
           }
           100% {
-            transform: translateX(calc(-100% - 2rem));
+            transform: translateX(-50%);
           }
         }
         .animate-scroll {
