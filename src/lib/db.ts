@@ -1,5 +1,5 @@
 import { createClient } from './supabase'
-import type { Profile, SubscriptionGroup, SubscriptionMember, Payment, Activity } from './types'
+import type { Profile, SubscriptionGroup, SubscriptionMember, Payment, Activity, Referral } from './types'
 
 const supabase = createClient()
 
@@ -82,7 +82,9 @@ export const db = {
       status: item.subscription_groups.status,
       created_at: item.subscription_groups.created_at,
       updated_at: item.subscription_groups.updated_at,
-      host_id: item.subscription_groups.host_id
+      host_id: item.subscription_groups.host_id,
+      remaining_spaces: item.subscription_groups.remaining_spaces,
+      location: item.subscription_groups.location
     }))
   },
 
@@ -156,5 +158,130 @@ export const db = {
     
     if (error) throw error
     return data
-  }
+  },
+
+  // Referral functions
+  async getReferralByReferredId(referredId: string) {
+    const { data, error } = await supabase
+      .from('referrals')
+      .select('*')
+      .eq('referred_id', referredId)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async createReferral(data: {
+    referrerId: string;
+    referredId: string;
+    rewardAmount: number;
+  }) {
+    const { data: referralData, error } = await supabase
+      .from('referrals')
+      .insert({
+        referrer_id: data.referrerId,
+        referred_id: data.referredId,
+        reward_amount: data.rewardAmount,
+        status: 'pending'
+      })
+      .select()
+      .single()
+    
+    if (error) throw error
+    return referralData
+  },
+
+  async getReferralById(id: string) {
+    const { data, error } = await supabase
+      .from('referrals')
+      .select('*')
+      .eq('id', id)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async updateReferral(id: string, data: Partial<Referral>) {
+    const { data: updatedReferral, error } = await supabase
+      .from('referrals')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return updatedReferral
+  },
+
+  async createReferralReward(data: {
+    userId: string;
+    amount: number;
+    type: string;
+  }) {
+    const { data: referralRewardData, error } = await supabase
+      .from('referralRewards')
+      .insert(data)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return referralRewardData
+  },
+
+  async getCompletedReferralsCount(userId: string) {
+    const { count, error } = await supabase
+      .from('referrals')
+      .select('*', { count: 'exact', head: true })
+      .eq('referrer_id', userId)
+      .eq('status', 'completed')
+    
+    if (error) throw error
+    return count || 0
+  },
+
+  async getTierReward(userId: string, tier: string) {
+    const { data, error } = await supabase
+      .from('referralRewards')
+      .select('*')
+      .eq('userId', userId)
+      .eq('type', `tier_${tier.toLowerCase()}`)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async getTotalReferralsCount(userId: string) {
+    const { count, error } = await supabase
+      .from('referrals')
+      .select('*', { count: 'exact', head: true })
+      .eq('referrer_id', userId)
+    
+    if (error) throw error
+    return count || 0
+  },
+
+  async getPendingReferralsCount(userId: string) {
+    const { count, error } = await supabase
+      .from('referrals')
+      .select('*', { count: 'exact', head: true })
+      .eq('referrer_id', userId)
+      .eq('status', 'pending')
+    
+    if (error) throw error
+    return count || 0
+  },
+
+  async getUserReferralRewards(userId: string) {
+    const { data, error } = await supabase
+      .from('referral_rewards')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data || []
+  },
 } 

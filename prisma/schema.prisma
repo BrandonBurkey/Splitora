@@ -24,6 +24,9 @@ model User {
   hostedGroups  SubscriptionGroup[] @relation("GroupHost")
   payments      Payment[]
   activities    Activity[]
+  referralsGiven    Referral[] @relation("Referrer")
+  referralsReceived Referral[] @relation("Referred")
+  referralRewards   ReferralReward[]
 }
 
 model SubscriptionGroup {
@@ -78,4 +81,27 @@ model Activity {
   groupId       String?
   user          User      @relation(fields: [userId], references: [id])
   group         SubscriptionGroup? @relation(fields: [groupId], references: [id])
+}
+
+model Referral {
+  id          String    @id @default(cuid())
+  referrerId  String
+  referredId  String
+  status      String    @default("pending")
+  rewardAmount Float
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  referrer    User      @relation("Referrer", fields: [referrerId], references: [id])
+  referred    User      @relation("Referred", fields: [referredId], references: [id])
+}
+
+model ReferralReward {
+  id        String    @id @default(cuid())
+  userId    String
+  amount    Float
+  status    String    @default("pending")
+  type      String
+  createdAt DateTime  @default(now())
+  paidAt    DateTime?
+  user      User      @relation(fields: [userId], references: [id])
 }

@@ -1,14 +1,17 @@
 import Button from "@/components/ui/Button"
 import { useRouter } from "next/navigation"
+import Navigation from '@/components/Navigation';
 
 export default function GroupPage() {
   const router = useRouter()
 
   return (
     <div>
-      {/* Navigation */}
-      <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-4">
+      <Navigation />
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex items-center gap-4 mb-8">
           <Button 
             variant="outline" 
             size="sm" 
@@ -20,14 +23,9 @@ export default function GroupPage() {
             </svg>
             Back to Dashboard
           </Button>
-          <span className="text-2xl font-bold text-emerald-600">Splitora</span>
         </div>
-        <div className="flex gap-4">
-          <Button variant="outline" size="sm" onClick={() => router.push('/explore')}>
-            Explore
-          </Button>
-        </div>
-      </nav>
+        {/* Rest of the group page content */}
+      </main>
     </div>
   )
 } 

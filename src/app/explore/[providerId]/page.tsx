@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase';
 import { serviceProviders, type ServiceProvider } from '@/lib/servicePresets';
 import Image from 'next/image';
 import { use } from 'react';
+import Navigation from '@/components/Navigation';
 
 const ProviderPage = ({ params }: { params: Promise<{ providerId: string }> }) => {
   const { user } = useAuth();
@@ -147,17 +148,7 @@ const ProviderPage = ({ params }: { params: Promise<{ providerId: string }> }) =
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-emerald-50">
-      {/* Navigation */}
-      <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <span className="text-2xl font-bold text-emerald-600">Splitora</span>
-        </div>
-        <div className="flex gap-4">
-          <Button variant="outline" size="sm" onClick={() => router.push('/dashboard')}>
-            Dashboard
-          </Button>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
@@ -171,8 +162,23 @@ const ProviderPage = ({ params }: { params: Promise<{ providerId: string }> }) =
               className="object-contain"
             />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{provider.name}</h1>
+          <div className="flex-1">
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold text-gray-900">{provider.name}</h1>
+              {provider.terms_url && (
+                <a 
+                  href={provider.terms_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
+                  </svg>
+                  Terms of Service
+                </a>
+              )}
+            </div>
             <p className="text-gray-600">Share your subscription and save money</p>
           </div>
         </div>
@@ -252,7 +258,7 @@ const ProviderPage = ({ params }: { params: Promise<{ providerId: string }> }) =
                         <p className="text-sm text-gray-600">{plan.description}</p>
                       </div>
                       <span className="text-sm text-gray-500">
-                        {group.current_members || 0}/{plan.max_members} members
+                        {(group.current_members || 0) + 1}/{plan.max_members} members
                       </span>
                     </div>
                     <p className="text-emerald-600 font-medium">

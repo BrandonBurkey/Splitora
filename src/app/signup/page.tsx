@@ -4,6 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { nanoid } from 'nanoid';
+import { createClient } from '@/lib/supabase';
+import { referralService } from '@/lib/referralService';
+
+// Initialize the supabase client
+const supabase = createClient();
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
@@ -13,6 +19,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { signUp } = useAuth();
+  const [referralCode, setReferralCode] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +34,26 @@ export default function SignUp() {
 
     try {
       await signUp(email, password);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error('User not found after sign-up');
+      }
+
+      // Generate a 6-character unique referral code
+      const newReferralCode = nanoid(6);
+
+      // Update the profile with the referral code
+      await supabase
+        .from('profiles')
+        .update({ referral_code: newReferralCode })
+        .eq('id', user.id);
+
+      // If a referral code was provided, create a referral record
+      if (referralCode) {
+        await referralService.createReferralFromCode(referralCode, user.id);
+      }
+
       router.push('/dashboard');
     } catch (err) {
       setError('Failed to create account. Please try again.');
@@ -85,6 +112,17 @@ export default function SignUp() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               required
               minLength={6}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="referralCode">Referral Code (Optional)</label>
+            <input
+              type="text"
+              id="referralCode"
+              value={referralCode}
+              onChange={(e) => setReferralCode(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
             />
           </div>
 

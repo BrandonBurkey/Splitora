@@ -2,23 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
+import Navigation from '@/components/Navigation';
 
 export default function PrivacyPage() {
   const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-emerald-50">
-      {/* Navigation */}
-      <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-emerald-600">Splitora</span>
-        </div>
-        <div className="flex gap-4">
-          <Button variant="outline" size="sm" onClick={() => router.push('/')}>
-            Back to Home
-          </Button>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">

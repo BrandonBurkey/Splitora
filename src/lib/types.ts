@@ -56,4 +56,24 @@ export type Activity = {
   user_id: string
   group_id: string | null
   amount?: number
+}
+
+export type Referral = {
+  id: string;
+  referrerId: string;
+  referredId: string;
+  status: 'pending' | 'completed';
+  rewardAmount: number;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export type ReferralReward = {
+  id: string;
+  userId: string;
+  amount: number;
+  status: 'pending' | 'paid';
+  type: 'referral' | 'tier';
+  createdAt: string;
+  paidAt: string | null;
 } 

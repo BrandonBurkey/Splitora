@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import { serviceProviders } from '@/lib/servicePresets';
 import Image from 'next/image';
 import { Search } from 'lucide-react';
+import Navigation from '@/components/Navigation';
 
 const ExplorePage = () => {
   const { user } = useAuth();
@@ -203,34 +204,13 @@ const ExplorePage = () => {
         >
           View Available Plans
         </Button>
-
-        {provider.terms_url && (
-          <a 
-            href={provider.terms_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-gray-500 hover:text-gray-700 mt-2 block text-center"
-          >
-            View Terms of Service
-          </a>
-        )}
       </div>
     );
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-emerald-50">
-      {/* Navigation */}
-      <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-emerald-600">Splitora</span>
-        </div>
-        <div className="flex gap-4">
-          <Button variant="outline" size="sm" onClick={() => router.push('/dashboard')}>
-            Dashboard
-          </Button>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
@@ -302,13 +282,13 @@ const ExplorePage = () => {
                 <div key={provider.id} className="inline-block w-72 flex-shrink-0">
                   <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow h-full">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 relative bg-gray-100 rounded-lg">
+                      <div className="w-10 h-10 relative">
                         <Image
                           src={provider.logo}
                           alt={provider.name}
                           fill
                           sizes="(max-width: 768px) 40px, 40px"
-                          className="object-contain p-1"
+                          className="object-contain"
                           priority={true}
                           loading="eager"
                           onError={(e) => {
@@ -325,6 +305,11 @@ const ExplorePage = () => {
                       <p className="text-emerald-600 font-medium text-sm">
                         Save up to ${formatPrice(provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members))}/month ({Math.round(((provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members)) / provider.plans[0].price) * 100)}% off)
                       </p>
+                      {provider.plans[0].requires_same_household && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          * Members must be part of the same household
+                        </p>
+                      )}
                     </div>
 
                     <Button 
@@ -342,13 +327,13 @@ const ExplorePage = () => {
                 <div key={`${provider.id}-duplicate`} className="inline-block w-72 flex-shrink-0">
                   <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow h-full">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 relative bg-gray-100 rounded-lg">
+                      <div className="w-10 h-10 relative">
                         <Image
                           src={provider.logo}
                           alt={provider.name}
                           fill
                           sizes="(max-width: 768px) 40px, 40px"
-                          className="object-contain p-1"
+                          className="object-contain"
                           priority={true}
                           loading="eager"
                           onError={(e) => {
@@ -365,6 +350,11 @@ const ExplorePage = () => {
                       <p className="text-emerald-600 font-medium text-sm">
                         Save up to ${formatPrice(provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members))}/month ({Math.round(((provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members)) / provider.plans[0].price) * 100)}% off)
                       </p>
+                      {provider.plans[0].requires_same_household && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          * Members must be part of the same household
+                        </p>
+                      )}
                     </div>
 
                     <Button 
