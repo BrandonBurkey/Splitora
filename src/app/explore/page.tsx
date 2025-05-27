@@ -246,48 +246,19 @@ const ExplorePage = () => {
 
       {/* Full-width scrolling container */}
       {!searchQuery && selectedCategory === 'all' && (
-        <div className="w-full overflow-hidden">
-          <div className="flex">
+        <div className="w-full overflow-hidden py-8">
+          <div className="relative">
             <div 
               ref={scrollContainerRef}
               className="flex gap-8 animate-scroll whitespace-nowrap"
+              style={{
+                width: 'fit-content',
+                willChange: 'transform'
+              }}
             >
               {filteredProviders.map((provider) => (
-                <div key={provider.id} className="inline-block w-72">
-                  <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 relative">
-                        <Image
-                          src={provider.logo}
-                          alt={provider.name}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900">{provider.name}</h3>
-                    </div>
-
-                    <div className="mb-3">
-                      <p className="text-emerald-600 font-medium text-sm">
-                        Save up to ${formatPrice(provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members))}/month ({Math.round(((provider.plans[0].price - (provider.plans[0].price / provider.plans[0].max_members)) / provider.plans[0].price) * 100)}% off)
-                      </p>
-                    </div>
-
-                    <Button 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => router.push(`/explore/${provider.id}`)}
-                    >
-                      View Available Plans
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-8 animate-scroll whitespace-nowrap ml-8">
-              {filteredProviders.map((provider) => (
-                <div key={`${provider.id}-duplicate`} className="inline-block w-72">
-                  <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div key={provider.id} className="inline-block w-72 flex-shrink-0">
+                  <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow h-full">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 relative">
                         <Image
@@ -327,11 +298,13 @@ const ExplorePage = () => {
             transform: translateX(0);
           }
           100% {
-            transform: translateX(-100%);
+            transform: translateX(calc(-100% - 2rem));
           }
         }
         .animate-scroll {
-          animation: scroll 120s linear infinite;
+          animation: scroll 60s linear infinite;
+          display: flex;
+          gap: 2rem;
         }
         .animate-scroll:hover {
           animation-play-state: paused;
